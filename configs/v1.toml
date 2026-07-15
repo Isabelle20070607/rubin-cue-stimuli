@@ -1,0 +1,46 @@
+[project]
+version = "v1"
+seed = 78108
+base_count = 4
+canvas_size = 1024
+supersample = 2
+
+[geometry]
+top = 0.14
+bottom = 0.86
+center_x = 0.50
+content_left = 0.12
+content_right = 0.88
+
+[render]
+outer_gray = 36
+center_gray = 220
+cue_contrast_step = 9
+background_gray = 128
+shadow_min_abs_component = 0.020
+shadow_max_radius = 0.065
+
+[quality]
+mean_pair_max = 0.00392156862745098
+rms_pair_relative_max = 0.02
+edge_pair_relative_max = 0.05
+outline_path_relative_max = 0.15
+
+[experiment]
+visual_angle_height_deg = 16.9
+visual_angle_width_deg = 17.6
+short_fixation_min_ms = 1000
+short_fixation_max_ms = 1800
+short_stimulus_ms = 150
+short_mask_ms = 200
+continuous_fixation_ms = 2000
+continuous_stimulus_ms = 30000
+continuous_iti_min_ms = 3000
+continuous_iti_max_ms = 7000
+
+[selection]
+baseline_face_min = 0.35
+baseline_face_max = 0.65
+target_probability_min = 0.70
+target_probability_max = 0.85
+selected_base_count = 8

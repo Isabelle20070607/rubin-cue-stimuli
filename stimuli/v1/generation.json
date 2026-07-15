@@ -1,0 +1,43 @@
+{
+  "bank_kind": "factorial",
+  "base_count": 4,
+  "base_ids": [
+    "wm-cc0-classic",
+    "wm-bysa-classic",
+    "wm-bysa-klam",
+    "oc-274578-heads"
+  ],
+  "canvas_size": 1024,
+  "conditions_by_base": {
+    "oc-274578-heads": 96,
+    "wm-bysa-classic": 96,
+    "wm-bysa-klam": 96,
+    "wm-cc0-classic": 96
+  },
+  "config_path": "G:\\workspace\\rubin-cue-stimuli\\configs\\v1.toml",
+  "config_version": "v1",
+  "excluded_source_ids": [
+    "oc-276846-profile",
+    "oc-276861-full-faces"
+  ],
+  "mask_count": 4,
+  "output": "G:\\workspace\\rubin-cue-stimuli\\stimuli\\v1",
+  "quality": {
+    "edge_pair_relative_max": 0.05,
+    "mean_pair_max": 0.00392156862745098,
+    "outline_path_relative_max": 0.15,
+    "rms_pair_relative_max": 0.02
+  },
+  "schema_version": 7,
+  "shadow_bounds": {
+    "max_radius": 0.065,
+    "min_abs_component": 0.02
+  },
+  "stimulus_count": 384,
+  "tag_counts": {
+    "ambiguous": 24,
+    "conflict": 144,
+    "face": 96,
+    "vase": 120
+  }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "base_id": "wm-cc0-classic",
+    "mask_path": "masks/wm-cc0-classic-mask.png",
+    "sha256": "37914a8e490e8ee32d579f99a532c84a71370d4cbc108e964522b78511ac8677"
+  },
+  {
+    "base_id": "wm-bysa-classic",
+    "mask_path": "masks/wm-bysa-classic-mask.png",
+    "sha256": "8534aec4bcd3397c31e87d4adf79d664defb4397cb7c3d0decaa8bc36d0621a8"
+  },
+  {
+    "base_id": "wm-bysa-klam",
+    "mask_path": "masks/wm-bysa-klam-mask.png",
+    "sha256": "7f582d5211e9e869367c7b2c246611d1b5578109e8d02e255177367e1db8dec6"
+  },
+  {
+    "base_id": "oc-274578-heads",
+    "mask_path": "masks/oc-274578-heads-mask.png",
+    "sha256": "6bbbd80117375ec3c549b185f9f13a6678f4b28b1ef2516c0b4bfecb905401d2"
+  }
+]
