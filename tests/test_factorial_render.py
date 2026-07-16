@@ -104,3 +104,35 @@ def test_material_changes_only_the_vase_surface(config) -> None:
     assert not np.array_equal(flat_image, relief_image)
     metadata = relief_svg.split("<metadata>", 1)[1].split("</metadata>", 1)[0]
     assert "fixation_baked_in&quot;: false" in metadata
+
+
+def test_v2_uses_selected_texture_ranges_and_matched_flat_palette(v2_config) -> None:
+    assert v2_config.palette_values == {"black": 43, "gray": 154, "white": 201}
+    assert v2_config.material_value_ranges == {
+        "black": (20, 58),
+        "gray": (103, 186),
+        "white": (132, 244),
+    }
+    assert v2_config.material_shape_rendering == "crispEdges"
+
+
+def test_v2_material_uses_crisp_edges_to_avoid_mesh_seams(config, v2_config) -> None:
+    spec = CombinationSpec(
+        None,
+        "ambiguous",
+        "none",
+        "vase",
+        "outer-black_center-gray",
+    )
+    v2_svg, _ = render_factorial_svg(v2_config, _base(v2_config), spec)
+    assert '<g id="material-vase-diffuse" shape-rendering="crispEdges">' in v2_svg
+
+    v1_spec = CombinationSpec(
+        "ambiguous",
+        "ambiguous",
+        "none",
+        "vase",
+        "outer-black_center-gray",
+    )
+    v1_svg, _ = render_factorial_svg(config, _base(config), v1_spec)
+    assert 'shape-rendering="crispEdges"' not in v1_svg

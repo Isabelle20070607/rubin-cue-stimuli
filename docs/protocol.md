@@ -21,6 +21,14 @@ material states, and the same 6 polarity mappings. After the shading/material ex
 and conflict filtering, five directional states remain: 30 conditions per source and 120
 stimuli overall.
 
+V2 reduces the material-lighting span for black and gray while retaining the selected
+white material range. The texture ranges are black `20-58`, gray `103-186`, and white
+`132-244`. With `crispEdges` eliminating antialiased patch seams, the final texture means
+across all enabled sources and relevant polarities at 1024 px are 43.3397, 153.8391, and
+200.6372. The matching flat means are 43.1419, 153.9663, and 200.8915 from the
+black/gray/white palette `43/154/201`; every aggregate mismatch is below 0.26 gray level.
+V1 retains its original palette and material rendering.
+
 - `content=face` breaks lightness homogeneity between the two profile regions;
   `content=vase` gives both profile regions the same horizontal stripe structure.
 - `outline=face` closes the two side profiles against the frame; `outline=ambiguous`
@@ -45,11 +53,15 @@ Conditions containing at least one face-directed and one vase-directed cue are t
 response and not a claim of equal face/vase probability. This rule describes v1; v2 does
 not generate those conditions and has no conflict field or tag.
 
-## Provisional brief initial-percept calibration
+## Optional brief backward-masking calibration
 
 The full factorial bank is a stimulus library; a presentation subset must be chosen before
-participant scheduling. A brief trial contains a 1.0-1.8 s fixation
-interval, 150 ms stimulus, 200 ms phase-scrambled mask, then a face/vase/unsure response.
+participant scheduling. The generated phase-scrambled masks are retained only for an
+explicitly approved backward-masking block; the default v2 experiment does not present
+them. If such a human calibration block is approved, a brief trial may contain a 1.0-1.8 s
+fixation interval, 150 ms stimulus, 200 ms mask, then a face/vase/unsure response. This
+timing is a separate paradigm choice, not an implication of the files under `masks/`.
+
 The fixation marker is drawn by MonkeyLogic and is absent from the stimulus files. The
 default is not to overlay fixation during stimulus presentation.
 

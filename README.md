@@ -34,15 +34,22 @@ The v2 design removes the content axis and every condition containing opposing f
 vase-directed cues. It retains outline, hard shading, vase material, and all six polarity
 mappings. Five non-conflicting directional states produce 30 conditions per source and
 120 images under schema v8. V2 manifests, IDs, SVG metadata, and filenames contain no
-content or conflict fields. Across both banks, active figure shading never appears with
-vase material relief. `oc-276846-profile` and `oc-276861-full-faces` remain excluded as
-complete stimulus families; their immutable masters remain only for provenance.
+content or conflict fields. Its material ranges are black `20-58`, gray `103-186`, and
+white `132-244`; the matching non-textured palette is `43/154/201`. Material patches use
+SVG `crispEdges` rendering to prevent antialiased shared edges from forming a grid or
+moiré pattern. Across both banks, active figure shading never appears with vase material
+relief. `oc-276846-profile` and `oc-276861-full-faces` remain excluded as complete stimulus
+families; their immutable masters remain only for provenance.
 
 The versioned banks are frozen under `stimuli/v1` and `stimuli/v2`; rendering-rule changes
 require a new version or a full regeneration, manifest validation, and hash reproducibility
 check. Experiment delivery targets NIMH MonkeyLogic, not PsychoPy. Stimulus files never
 contain a baked-in fixation mark; MonkeyLogic may draw fixation dynamically and must
 record that choice.
+
+Each bank also retains one deterministic phase-scrambled mask per enabled source. These
+are optional assets for an explicitly approved backward-masking block; their presence in
+`masks/` does not make them part of the default v2 presentation sequence.
 
 V1 audits and manifests assign `face`, `ambiguous`, `vase`, or `conflict`; v2 assigns only
 `face`, `ambiguous`, or `vase`. Polarity remains a neutral control. An active

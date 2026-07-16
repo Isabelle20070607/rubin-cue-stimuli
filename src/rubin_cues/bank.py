@@ -11,7 +11,7 @@ from PIL import Image
 
 from .combinations import CombinationSpec, combination_specs_for_source
 from .config import Config
-from .factorial_render import PALETTE_VALUES, rasterize_factorial_svg, render_factorial_svg
+from .factorial_render import rasterize_factorial_svg, render_factorial_svg
 from .metrics import image_metrics, sha256_path
 from .render import phase_scrambled_mask
 from .source_assets import SOURCE_ASSETS, verify_source_assets
@@ -174,6 +174,16 @@ def generate_bank(
             _write_png(png_path, image)
             svg_path.write_text(svg, encoding="utf-8")
             spec_row = spec.as_dict()
+            params_payload: dict[str, Any] = {
+                "fixation_baked_in": False,
+                "palette_values": config.palette_values,
+                "render": render_params,
+            }
+            if config.design_profile == "v2":
+                params_payload["material_value_ranges"] = {
+                    color: list(value_range)
+                    for color, value_range in config.material_value_ranges.items()
+                }
             row: dict[str, Any] = {
                 "stimulus_id": stimulus_id,
                 "base_id": base.source.source_id,
@@ -196,11 +206,7 @@ def generate_bank(
                 **image_metrics(image),
                 **geometry_metrics,
                 "params_json": json.dumps(
-                    {
-                        "fixation_baked_in": False,
-                        "palette_values": PALETTE_VALUES,
-                        "render": render_params,
-                    },
+                    params_payload,
                     separators=(",", ":"),
                     sort_keys=True,
                 ),
@@ -266,6 +272,12 @@ def generate_bank(
     }
     if config.design_profile == "v2":
         generation["design_profile"] = "v2"
+        generation["palette_values"] = config.palette_values
+        generation["material_value_ranges"] = {
+            color: list(value_range)
+            for color, value_range in config.material_value_ranges.items()
+        }
+        generation["material_shape_rendering"] = config.material_shape_rendering
     (output_path / "generation.json").write_text(
         json.dumps(generation, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",

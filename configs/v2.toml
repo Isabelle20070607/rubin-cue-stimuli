@@ -18,6 +18,17 @@ cue_contrast_step = 9
 background_gray = 128
 shadow_min_abs_component = 0.020
 shadow_max_radius = 0.065
+material_shape_rendering = "crispEdges"
+
+[render.palette]
+black = 43
+gray = 154
+white = 201
+
+[render.material_value_ranges]
+black = [20, 58]
+gray = [103, 186]
+white = [132, 244]
 
 [quality]
 mean_pair_max = 0.00392156862745098

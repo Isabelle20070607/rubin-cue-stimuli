@@ -18,9 +18,14 @@
   shadow provenance; active offsets vary by stimulus and clear the configured absolute
   component threshold, while inactive shadows store zero displacement.
 - `seed`, `config_version`, `params_json`: generation provenance.
+- V2 `generation.json` additionally records `palette_values` and
+  `material_value_ranges`, plus `material_shape_rendering=crispEdges`; the palette and
+  ranges also appear in row provenance where applicable.
 - `png_path`, `svg_path`, `file_sha256`, `svg_sha256`: frozen artifact identity.
 - `mean_luminance`, `rms_contrast`, `edge_energy`: PNG image metrics.
 - `center_area_ratio`, `path_length`, `convexity_proxy`: geometry metrics.
+- `masks.json` and `masks/*.png`: deterministic optional backward-masking assets, not
+  members of the default v2 presentation schedule.
 
 ## Pre-render combination audit
 
@@ -48,14 +53,16 @@ approved experiment paradigm must define the behavioral response vocabulary inde
 ## Proposed schedules (not implemented for schemas v7/v8)
 
 The replacement schema should include participant/animal, session, block, trial, stimulus
-ID/path, mask path, response mapping, requested durations, fixation-overlay policy,
-randomization seed, and visual angle. The current scheduling module targets the obsolete
-graded-axis manifest and must not be used with the formal factorial bank.
+ID/path, response mapping, requested durations, fixation-overlay policy, randomization
+seed, and visual angle. A mask path is included only for an explicitly approved
+backward-masking block. The current scheduling module targets the obsolete graded-axis
+manifest and must not be used with the formal factorial bank.
 
 ## Proposed responses (not implemented for schemas v7/v8)
 
-Brief-task rows should store stimulus onset, actual stimulus/mask frames, dropped-frame
-count, response, RT, response mapping, and display configuration ID. If the approved
-paradigm uses continuous reports, event rows should add event index, percept state, event
-time, and stimulus duration. Final fields depend on the MonkeyLogic paradigm and recording
-hardware defined in `experiment-paradigm.md`.
+Brief-task rows should store stimulus onset, actual stimulus frames, dropped-frame count,
+response, RT, response mapping, and display configuration ID. Mask frames are recorded
+only when an approved block uses them. If the approved paradigm uses continuous reports,
+event rows should add event index, percept state, event time, and stimulus duration. Final
+fields depend on the MonkeyLogic paradigm and recording hardware defined in
+`experiment-paradigm.md`.

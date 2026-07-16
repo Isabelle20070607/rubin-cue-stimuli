@@ -10,13 +10,10 @@ import resvg_py
 from PIL import Image
 
 from .combinations import CombinationSpec
-from .config import Config
+from .config import DEFAULT_MATERIAL_VALUE_RANGES, DEFAULT_PALETTE_VALUES, Config
 from .source_geometry import SourceBase
 
-PALETTE_VALUES = {"black": 24, "gray": 133, "white": 232}
-PALETTE_HEX = {
-    name: f"#{value:02x}{value:02x}{value:02x}" for name, value in PALETTE_VALUES.items()
-}
+PALETTE_VALUES = DEFAULT_PALETTE_VALUES
 
 
 def _points_path(points: list[tuple[float, float]]) -> str:
@@ -93,24 +90,31 @@ def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
     return np.convolve(padded, np.ones(window) / window, mode="valid")
 
 
-def _material_gray(u: float, vertical_slope: float, center_color: str) -> str:
+def _material_gray(
+    u: float,
+    vertical_slope: float,
+    center_color: str,
+    value_ranges: dict[str, tuple[int, int]],
+) -> str:
     depth = float(np.sqrt(max(0.0, 1.0 - u * u)))
     normal = np.array([u, -vertical_slope * depth, depth], dtype=np.float64)
     normal /= max(float(np.linalg.norm(normal)), 1e-9)
     light = np.array([-0.46, -0.32, 0.83], dtype=np.float64)
     light /= float(np.linalg.norm(light))
     diffuse = max(0.0, float(np.dot(normal, light)))
-    low, high = {
-        "black": (18, 92),
-        "gray": (52, 220),
-        "white": (132, 244),
-    }[center_color]
+    low, high = value_ranges[center_color]
     value = int(round(low + (high - low) * (0.16 + 0.84 * diffuse)))
     value = max(0, min(255, value))
     return f"#{value:02x}{value:02x}{value:02x}"
 
 
-def _material_vase_mesh(base: SourceBase, center_color: str) -> str:
+def _material_vase_mesh(
+    base: SourceBase,
+    center_color: str,
+    value_ranges: dict[str, tuple[int, int]] = DEFAULT_MATERIAL_VALUE_RANGES,
+    *,
+    crisp_edges: bool = False,
+) -> str:
     y_indices = np.unique(np.linspace(0, len(base.y) - 1, 65).astype(int))
     u_edges = np.linspace(-1.0, 1.0, 33)
     slope_widths = _moving_average(base.widths, max(15, len(base.widths) // 18))
@@ -125,7 +129,7 @@ def _material_vase_mesh(base: SourceBase, center_color: str) -> str:
         )
         for u0, u1 in zip(u_edges[:-1], u_edges[1:], strict=True):
             midpoint = float((u0 + u1) / 2.0)
-            fill = _material_gray(midpoint, slope, center_color)
+            fill = _material_gray(midpoint, slope, center_color, value_ranges)
             path = (
                 f"M {0.5 + u0 * width0:.6f} {y0:.6f} "
                 f"L {0.5 + u1 * width0:.6f} {y0:.6f} "
@@ -133,7 +137,12 @@ def _material_vase_mesh(base: SourceBase, center_color: str) -> str:
                 f"L {0.5 + u0 * width1:.6f} {y1:.6f} Z"
             )
             patches.append(f'<path d="{path}" fill="{fill}"/>')
-    return '<g id="material-vase-diffuse">' + "".join(patches) + "</g>"
+    crisp_attribute = ' shape-rendering="crispEdges"' if crisp_edges else ""
+    return (
+        f'<g id="material-vase-diffuse"{crisp_attribute}>'
+        + "".join(patches)
+        + "</g>"
+    )
 
 
 def _content_side(base: SourceBase) -> str:
@@ -149,9 +158,13 @@ def render_factorial_svg(
     vase_path = center_path(base)
     outline_top_y = base.source.face_outline_top_y if spec.outline == "face" else None
     left_face, right_face = face_paths(base, top_y_override=outline_top_y)
-    outer_fill = PALETTE_HEX[spec.outer_color]
-    center_fill = PALETTE_HEX[spec.center_color]
-    third_fill = PALETTE_HEX[spec.third_color]
+    palette_hex = {
+        name: f"#{value:02x}{value:02x}{value:02x}"
+        for name, value in config.palette_values.items()
+    }
+    outer_fill = palette_hex[spec.outer_color]
+    center_fill = palette_hex[spec.center_color]
+    third_fill = palette_hex[spec.third_color]
     dx, dy, shadow_seed = shadow_offset(config, base, spec)
 
     content_pattern = ""
@@ -215,7 +228,16 @@ def render_factorial_svg(
             f'<path d="{right_face}" fill="url(#content-stripes)"/></g>'
         )
 
-    material = _material_vase_mesh(base, spec.center_color) if spec.material == "vase" else ""
+    material = (
+        _material_vase_mesh(
+            base,
+            spec.center_color,
+            config.material_value_ranges,
+            crisp_edges=config.material_shape_rendering == "crispEdges",
+        )
+        if spec.material == "vase"
+        else ""
+    )
     render_params = {
         "background_color": spec.background_color,
         "figure_color": spec.figure_color,
