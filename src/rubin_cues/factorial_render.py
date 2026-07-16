@@ -154,12 +154,17 @@ def render_factorial_svg(
     third_fill = PALETTE_HEX[spec.third_color]
     dx, dy, shadow_seed = shadow_offset(config, base, spec)
 
+    content_pattern = ""
+    if spec.content is not None:
+        content_pattern = (
+            '<pattern id="content-stripes" width="1" height=".050" '
+            'patternUnits="userSpaceOnUse">'
+            f'<rect width="1" height=".050" fill="{outer_fill}"/>'
+            f'<rect width="1" height=".018" fill="{third_fill}"/>'
+            "</pattern>"
+        )
     definitions = (
-        '<defs><pattern id="content-stripes" width="1" height=".050" '
-        'patternUnits="userSpaceOnUse">'
-        f'<rect width="1" height=".050" fill="{outer_fill}"/>'
-        f'<rect width="1" height=".018" fill="{third_fill}"/>'
-        '</pattern><clipPath id="canvas-clip"><rect width="1" height="1"/>'
+        f'<defs>{content_pattern}<clipPath id="canvas-clip"><rect width="1" height="1"/>'
         "</clipPath></defs>"
     )
 
@@ -213,7 +218,6 @@ def render_factorial_svg(
     material = _material_vase_mesh(base, spec.center_color) if spec.material == "vase" else ""
     render_params = {
         "background_color": spec.background_color,
-        "content_face_accent_side": content_side,
         "figure_color": spec.figure_color,
         "figure_region": spec.figure_region,
         "fixation_baked_in": False,
@@ -226,6 +230,8 @@ def render_factorial_svg(
         "shade_color": spec.shade_color,
         "third_color": spec.third_color,
     }
+    if spec.content is not None:
+        render_params["content_face_accent_side"] = content_side
     metadata = html.escape(
         json.dumps(
             {

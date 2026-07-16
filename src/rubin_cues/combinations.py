@@ -27,7 +27,7 @@ POLARITY_STATES = (
     "outer-white_center-gray",
 )
 
-COMBINATION_FIELDS = (
+V1_COMBINATION_FIELDS = (
     "combination_id",
     "content",
     "outline",
@@ -45,10 +45,14 @@ COMBINATION_FIELDS = (
     "vase_cues",
 )
 
+V2_COMBINATION_FIELDS = tuple(
+    field for field in V1_COMBINATION_FIELDS if field not in ("content", "is_conflict")
+)
+
 
 @dataclass(frozen=True)
 class CombinationSpec:
-    content: ContentState
+    content: ContentState | None
     outline: OutlineState
     shading: ShadingState
     material: MaterialState
@@ -132,26 +136,30 @@ class CombinationSpec:
 
     @property
     def compact_id(self) -> str:
-        content_code = {"face": "f", "ambiguous": "a", "vase": "v"}[self.content]
         outline_code = {"ambiguous": "a", "face": "f"}[self.outline]
         shading_code = {"none": "n", "figure": "f"}[self.shading]
         material_code = {"ambiguous": "a", "vase": "v"}[self.material]
         color_code = {"black": "b", "gray": "g", "white": "w"}
         polarity_code = color_code[self.outer_color] + color_code[self.center_color]
-        return f"c{content_code}-o{outline_code}-s{shading_code}-m{material_code}-p{polarity_code}"
+        suffix = f"o{outline_code}-s{shading_code}-m{material_code}-p{polarity_code}"
+        if self.content is None:
+            return suffix
+        content_code = {"face": "f", "ambiguous": "a", "vase": "v"}[self.content]
+        return f"c{content_code}-{suffix}"
 
     @property
     def combination_id(self) -> str:
-        return (
-            f"content-{self.content}__outline-{self.outline}__"
-            f"shading-{self.shading}__material-{self.material}__"
-            f"polarity-{self.polarity}"
+        suffix = (
+            f"outline-{self.outline}__shading-{self.shading}__"
+            f"material-{self.material}__polarity-{self.polarity}"
         )
+        if self.content is None:
+            return suffix
+        return f"content-{self.content}__{suffix}"
 
     def as_dict(self) -> dict[str, object]:
-        return {
+        row: dict[str, object] = {
             "combination_id": self.combination_id,
-            "content": self.content,
             "outline": self.outline,
             "shading": self.shading,
             "material": self.material,
@@ -162,19 +170,29 @@ class CombinationSpec:
             "third_color": self.third_color,
             "shade_color": self.shade_color,
             "design_tag": self.design_tag,
-            "is_conflict": self.design_tag == "conflict",
             "face_cues": "|".join(self.face_cues),
             "vase_cues": "|".join(self.vase_cues),
         }
+        if self.content is not None:
+            row["content"] = self.content
+            row["is_conflict"] = self.design_tag == "conflict"
+        return row
 
 
-def combination_specs(*, allow_face_outline: bool = True) -> list[CombinationSpec]:
+def combination_specs(
+    *, allow_face_outline: bool = True, design_profile: str = "v1"
+) -> list[CombinationSpec]:
+    if design_profile not in ("v1", "v2"):
+        raise ValueError(f"unknown design profile: {design_profile}")
     outline_states: tuple[OutlineState, ...] = (
         OUTLINE_STATES if allow_face_outline else ("ambiguous",)
     )
-    return [
+    content_states: tuple[ContentState | None, ...] = (
+        CONTENT_STATES if design_profile == "v1" else (None,)
+    )
+    specs = [
         CombinationSpec(content, outline, shading, material, polarity)
-        for content in CONTENT_STATES
+        for content in content_states
         for outline in outline_states
         for shading in SHADING_STATES
         for material in MATERIAL_STATES
@@ -182,37 +200,54 @@ def combination_specs(*, allow_face_outline: bool = True) -> list[CombinationSpe
         if not (shading == "figure" and material == "vase")
         if not (shading == "figure" and content == "face")
     ]
+    if design_profile == "v2":
+        specs = [spec for spec in specs if spec.design_tag != "conflict"]
+    return specs
 
 
-def combination_specs_for_source(source_id: str) -> list[CombinationSpec]:
+def combination_specs_for_source(
+    source_id: str, *, design_profile: str = "v1"
+) -> list[CombinationSpec]:
     try:
         source = next(asset for asset in SOURCE_ASSETS if asset.source_id == source_id)
     except StopIteration as exc:
         raise ValueError(f"unknown source ID: {source_id}") from exc
-    return combination_specs(allow_face_outline=source.face_outline_allowed)
+    return combination_specs(
+        allow_face_outline=source.face_outline_allowed,
+        design_profile=design_profile,
+    )
 
 
-def write_combination_audit(output: str | Path) -> dict[str, object]:
+def write_combination_audit(
+    output: str | Path, *, design_profile: str = "v1"
+) -> dict[str, object]:
     output_path = Path(output).expanduser().resolve()
     output_path.mkdir(parents=True, exist_ok=True)
-    specs = combination_specs()
+    specs = combination_specs(design_profile=design_profile)
     rows = [spec.as_dict() for spec in specs]
+    fields = V1_COMBINATION_FIELDS if design_profile == "v1" else V2_COMBINATION_FIELDS
 
     csv_path = output_path / "combinations.csv"
     with csv_path.open("w", encoding="utf-8-sig", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=COMBINATION_FIELDS)
+        writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
 
+    tags = ("face", "ambiguous", "vase", "conflict") if design_profile == "v1" else (
+        "face",
+        "ambiguous",
+        "vase",
+    )
     tag_counts: dict[str, int] = {
         tag: sum(spec.design_tag == tag for spec in specs)
-        for tag in ("face", "ambiguous", "vase", "conflict")
+        for tag in tags
     }
     json_path = output_path / "combinations.json"
     json_path.write_text(
         json.dumps(
             {
                 "combination_count": len(rows),
+                "design_profile": design_profile,
                 "rows": rows,
                 "tag_counts": tag_counts,
             },
@@ -226,6 +261,7 @@ def write_combination_audit(output: str | Path) -> dict[str, object]:
     return {
         "ok": True,
         "combination_count": len(rows),
+        "design_profile": design_profile,
         "csv": str(csv_path),
         "json": str(json_path),
         "tag_counts": tag_counts,

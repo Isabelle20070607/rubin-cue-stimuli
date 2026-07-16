@@ -25,3 +25,22 @@ def small_config(config: Config) -> Config:
             "supersample": 1,
         },
     )
+
+
+@pytest.fixture
+def v2_config() -> Config:
+    return load_config(Path(__file__).parents[1] / "configs" / "v2.toml")
+
+
+@pytest.fixture
+def small_v2_config(v2_config: Config) -> Config:
+    return replace(
+        v2_config,
+        project={
+            **v2_config.project,
+            "version": "test-v2",
+            "base_count": 2,
+            "canvas_size": 192,
+            "supersample": 1,
+        },
+    )

@@ -32,6 +32,15 @@ def validate_manifest(path: str | Path) -> dict[str, Any]:
 
     if generation.get("bank_kind") != "factorial":
         errors.append("generation metadata is not a factorial bank")
+    design_profile = str(generation.get("design_profile", "v1"))
+    if design_profile not in ("v1", "v2"):
+        errors.append(f"unknown generation design profile: {design_profile}")
+        design_profile = "v1"
+    expected_schema_version = 7 if design_profile == "v1" else 8
+    if int(generation.get("schema_version", -1)) != expected_schema_version:
+        errors.append(
+            f"expected schema version {expected_schema_version} for {design_profile}"
+        )
     shadow_bounds = generation.get("shadow_bounds", {})
     try:
         shadow_min_abs_component = float(shadow_bounds["min_abs_component"])
@@ -63,7 +72,9 @@ def validate_manifest(path: str | Path) -> dict[str, Any]:
     expected_specs_by_base: dict[str, list[CombinationSpec]] = {}
     for base_id in declared_base_ids:
         try:
-            expected_specs_by_base[base_id] = combination_specs_for_source(base_id)
+            expected_specs_by_base[base_id] = combination_specs_for_source(
+                base_id, design_profile=design_profile
+            )
         except ValueError as exc:
             errors.append(str(exc))
     expected_count = sum(len(specs) for specs in expected_specs_by_base.values())
@@ -95,7 +106,9 @@ def validate_manifest(path: str | Path) -> dict[str, Any]:
         by_base[base_id].append(row)
         try:
             spec = CombinationSpec(
-                content=str(row["content"]),  # type: ignore[arg-type]
+                content=(
+                    str(row["content"]) if design_profile == "v1" else None
+                ),  # type: ignore[arg-type]
                 outline=str(row["outline"]),  # type: ignore[arg-type]
                 shading=str(row["shading"]),  # type: ignore[arg-type]
                 material=str(row["material"]),  # type: ignore[arg-type]
@@ -110,8 +123,15 @@ def validate_manifest(path: str | Path) -> dict[str, Any]:
             errors.append(f"{stimulus_id}: compact ID mismatch")
         if str(row.get("design_tag", "")) != spec.design_tag:
             errors.append(f"{stimulus_id}: design tag mismatch")
-        if _as_bool(row.get("is_conflict")) != (spec.design_tag == "conflict"):
-            errors.append(f"{stimulus_id}: conflict flag mismatch")
+        if design_profile == "v1":
+            if _as_bool(row.get("is_conflict")) != (spec.design_tag == "conflict"):
+                errors.append(f"{stimulus_id}: conflict flag mismatch")
+        else:
+            for forbidden_field in ("content", "is_conflict", "content_face_accent_side"):
+                if forbidden_field in row:
+                    errors.append(f"{stimulus_id}: v2 contains {forbidden_field}")
+            if spec.design_tag == "conflict":
+                errors.append(f"{stimulus_id}: v2 contains a conflict condition")
         for field, expected in (
             ("figure_region", spec.figure_region),
             ("figure_color", spec.figure_color),

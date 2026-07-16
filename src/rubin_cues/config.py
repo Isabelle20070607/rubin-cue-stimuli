@@ -21,6 +21,10 @@ class Config:
         return str(self.project["version"])
 
     @property
+    def design_profile(self) -> str:
+        return str(self.project.get("design_profile", "v1"))
+
+    @property
     def seed(self) -> int:
         return int(self.project["seed"])
 
@@ -60,6 +64,8 @@ def load_config(path: str | Path) -> Config:
         raise ValueError("project.canvas_size must be at least 64")
     if config.supersample < 1:
         raise ValueError("project.supersample must be positive")
+    if config.design_profile not in ("v1", "v2"):
+        raise ValueError("project.design_profile must be 'v1' or 'v2'")
     if not 0.0 < config.shadow_min_abs_component < 0.5:
         raise ValueError("render.shadow_min_abs_component must be between 0 and 0.5")
     if config.shadow_max_radius <= (2.0**0.5) * config.shadow_min_abs_component:

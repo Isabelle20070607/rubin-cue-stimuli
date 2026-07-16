@@ -6,13 +6,20 @@ Six immutable online SVG masters are retained, and four accepted profile-compati
 masters supply the formal shared contours. The original path data remains unchanged in
 `assets/source/`; every derived SVG and PNG records the source ID, license, and SHA-256.
 
-The formal bank uses the four accepted profile-compatible sources. The generic parameter space
-contains 3 content states, 2 outline states, 2 shading states, 2 material states, and 6
-ordered polarity mappings. Active figure shading cannot co-occur with either vase
-material relief or `content=face` (the different-colored-profile cue). This yields 96
-conditions per source and 384 stimuli overall. OpenClipart 276846/276861 remain in the
-immutable source registry for provenance but their complete stimulus families are
-excluded. The bank has no graded cue strengths.
+Both formal banks use the four accepted profile-compatible sources. OpenClipart
+276846/276861 remain in the immutable source registry for provenance, but their complete
+stimulus families are excluded. Neither bank has graded cue strengths.
+
+V1 schema v7 contains 3 content states, 2 outline states, 2 shading states, 2 material
+states, and 6 ordered polarity mappings. Active figure shading cannot co-occur with either
+vase material relief or `content=face`. This yields 96 conditions per source and 384
+stimuli overall.
+
+V2 schema v8 removes the content axis and excludes every combination containing both a
+face-directed and a vase-directed cue. It retains 2 outline states, 2 shading states, 2
+material states, and the same 6 polarity mappings. After the shading/material exclusion
+and conflict filtering, five directional states remain: 30 conditions per source and 120
+stimuli overall.
 
 - `content=face` breaks lightness homogeneity between the two profile regions;
   `content=vase` gives both profile regions the same horizontal stripe structure.
@@ -35,7 +42,8 @@ excluded. The bank has no graded cue strengths.
 
 Conditions containing at least one face-directed and one vase-directed cue are tagged
 `conflict`, regardless of cue count. `conflict` is a design class, not a fourth behavioral
-response and not a claim of equal face/vase probability.
+response and not a claim of equal face/vase probability. This rule describes v1; v2 does
+not generate those conditions and has no conflict field or tag.
 
 ## Provisional brief initial-percept calibration
 

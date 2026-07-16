@@ -17,7 +17,7 @@ from .render import phase_scrambled_mask
 from .source_assets import SOURCE_ASSETS, verify_source_assets
 from .source_geometry import SourceBase, source_bases
 
-MANIFEST_FIELDS = [
+V1_MANIFEST_FIELDS = [
     "stimulus_id",
     "base_id",
     "source_id",
@@ -59,6 +59,12 @@ MANIFEST_FIELDS = [
     "params_json",
 ]
 
+V2_MANIFEST_FIELDS = [
+    field
+    for field in V1_MANIFEST_FIELDS
+    if field not in ("content", "is_conflict", "content_face_accent_side")
+]
+
 
 def _write_png(path: Path, image: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -96,9 +102,9 @@ def _factorial_bases(config: Config) -> list[SourceBase]:
     return candidates[: config.base_count]
 
 
-def _neutral_spec() -> CombinationSpec:
+def _neutral_spec(design_profile: str) -> CombinationSpec:
     return CombinationSpec(
-        content="ambiguous",
+        content="ambiguous" if design_profile == "v1" else None,
         outline="ambiguous",
         shading="none",
         material="ambiguous",
@@ -135,12 +141,17 @@ def generate_bank(
 
     bases = _factorial_bases(config)
     specs_by_base = {
-        base.source.source_id: combination_specs_for_source(base.source.source_id) for base in bases
+        base.source.source_id: combination_specs_for_source(
+            base.source.source_id, design_profile=config.design_profile
+        )
+        for base in bases
     }
     rows: list[dict[str, Any]] = []
     mask_rows: list[dict[str, Any]] = []
     for base_index, base in enumerate(bases):
-        neutral_svg, _neutral_params = render_factorial_svg(config, base, _neutral_spec())
+        neutral_svg, _neutral_params = render_factorial_svg(
+            config, base, _neutral_spec(config.design_profile)
+        )
         neutral = np.asarray(rasterize_factorial_svg(neutral_svg), dtype=np.uint8)
         mask = phase_scrambled_mask(neutral, config.seed + base_index + 41)
         mask_path = mask_dir / f"{base.source.source_id}-mask.png"
@@ -163,7 +174,7 @@ def generate_bank(
             _write_png(png_path, image)
             svg_path.write_text(svg, encoding="utf-8")
             spec_row = spec.as_dict()
-            row = {
+            row: dict[str, Any] = {
                 "stimulus_id": stimulus_id,
                 "base_id": base.source.source_id,
                 "source_id": base.source.source_id,
@@ -171,26 +182,7 @@ def generate_bank(
                 "source_license": base.source.license_id,
                 "combination_id": spec.combination_id,
                 "compact_id": spec.compact_id,
-                **{
-                    key: spec_row[key]
-                    for key in (
-                        "content",
-                        "outline",
-                        "shading",
-                        "material",
-                        "polarity",
-                        "design_tag",
-                        "is_conflict",
-                        "face_cues",
-                        "vase_cues",
-                        "figure_region",
-                        "figure_color",
-                        "background_color",
-                        "third_color",
-                        "shade_color",
-                    )
-                },
-                "content_face_accent_side": render_params["content_face_accent_side"],
+                **spec_row,
                 "shadow_dx": render_params["shadow_dx"],
                 "shadow_dy": render_params["shadow_dy"],
                 "shadow_pair_mirrored": render_params["shadow_pair_mirrored"],
@@ -213,11 +205,18 @@ def generate_bank(
                     sort_keys=True,
                 ),
             }
+            if config.design_profile == "v1":
+                row["content_face_accent_side"] = render_params[
+                    "content_face_accent_side"
+                ]
             rows.append(row)
 
     csv_path = output_path / "manifest.csv"
     with csv_path.open("w", encoding="utf-8-sig", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=MANIFEST_FIELDS)
+        manifest_fields = (
+            V1_MANIFEST_FIELDS if config.design_profile == "v1" else V2_MANIFEST_FIELDS
+        )
+        writer = csv.DictWriter(stream, fieldnames=manifest_fields)
         writer.writeheader()
         writer.writerows(rows)
     jsonl_path = output_path / "manifest.jsonl"
@@ -230,12 +229,17 @@ def generate_bank(
         encoding="utf-8",
     )
 
+    tags = ("face", "ambiguous", "vase", "conflict") if config.design_profile == "v1" else (
+        "face",
+        "ambiguous",
+        "vase",
+    )
     tag_counts = {
         tag: sum(row["design_tag"] == tag for row in rows)
-        for tag in ("face", "ambiguous", "vase", "conflict")
+        for tag in tags
     }
     generation = {
-        "schema_version": 7,
+        "schema_version": 7 if config.design_profile == "v1" else 8,
         "bank_kind": "factorial",
         "config_version": config.version,
         "config_path": str(config.path),
@@ -260,6 +264,8 @@ def generate_bank(
         "quality": config.quality,
         "output": str(output_path),
     }
+    if config.design_profile == "v2":
+        generation["design_profile"] = "v2"
     (output_path / "generation.json").write_text(
         json.dumps(generation, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",

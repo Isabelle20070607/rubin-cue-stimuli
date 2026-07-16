@@ -50,6 +50,7 @@ def _parser() -> argparse.ArgumentParser:
         "combinations", help="write the pre-render factorial combination audit"
     )
     combinations.add_argument("--output", default="tmp/combination-audit")
+    combinations.add_argument("--config", default="configs/v1.toml")
 
     validate = commands.add_parser("validate", help="validate a frozen bank")
     validate.add_argument("--manifest", required=True)
@@ -88,7 +89,9 @@ def main(argv: list[str] | None = None) -> int:
             load_config(args.config), args.output, source_ids=args.source_ids
         )
     elif args.command == "combinations":
-        result = write_combination_audit(args.output)
+        result = write_combination_audit(
+            args.output, design_profile=load_config(args.config).design_profile
+        )
     elif args.command == "validate":
         result = validate_manifest(args.manifest)
     elif args.command == "montage":

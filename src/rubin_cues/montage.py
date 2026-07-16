@@ -102,21 +102,37 @@ def _create_factorial_montages(
     montage_paths: list[str] = []
     for base_id in base_ids:
         base_rows = [row for row in rows if str(row["base_id"]) == base_id]
-        directional_keys: list[tuple[str, str, str, str]] = []
-        for spec in combination_specs_for_source(base_id):
-            key = (spec.content, spec.outline, spec.shading, spec.material)
+        design_profile = "v1" if "content" in base_rows[0] else "v2"
+        directional_keys: list[tuple[str, ...]] = []
+        for spec in combination_specs_for_source(base_id, design_profile=design_profile):
+            key = (
+                (str(spec.content), spec.outline, spec.shading, spec.material)
+                if design_profile == "v1"
+                else (spec.outline, spec.shading, spec.material)
+            )
             if key not in directional_keys:
                 directional_keys.append(key)
-        lookup = {
-            (
-                str(row["content"]),
-                str(row["outline"]),
-                str(row["shading"]),
-                str(row["material"]),
-                str(row["polarity"]),
-            ): row
-            for row in base_rows
-        }
+        if design_profile == "v1":
+            lookup = {
+                (
+                    str(row["content"]),
+                    str(row["outline"]),
+                    str(row["shading"]),
+                    str(row["material"]),
+                    str(row["polarity"]),
+                ): row
+                for row in base_rows
+            }
+        else:
+            lookup = {
+                (
+                    str(row["outline"]),
+                    str(row["shading"]),
+                    str(row["material"]),
+                    str(row["polarity"]),
+                ): row
+                for row in base_rows
+            }
         width = left_label_width + len(POLARITY_STATES) * cell_size
         height = header_height + len(directional_keys) * (cell_size + tag_height)
         canvas = Image.new("L", (width, height), 150)
@@ -131,12 +147,16 @@ def _create_factorial_montages(
                 fill=248,
             )
         for row_index, key in enumerate(directional_keys):
-            content, outline, shading, material = key
+            if design_profile == "v1":
+                content, outline, shading, material = key
+                label = f"c:{content}  o:{outline}  s:{shading}  m:{material}"
+            else:
+                outline, shading, material = key
+                label = f"o:{outline}  s:{shading}  m:{material}"
             y = header_height + row_index * (cell_size + tag_height)
-            label = f"c:{content}  o:{outline}  s:{shading}  m:{material}"
             draw.text((6, y + 5), label, font=font, fill=248)
             for column, polarity in enumerate(POLARITY_STATES):
-                entry = lookup[(content, outline, shading, material, polarity)]
+                entry = lookup[(*key, polarity)]
                 x = left_label_width + column * cell_size
                 draw.text((x + 4, y + 5), str(entry["design_tag"]), font=font, fill=248)
                 with Image.open(root / str(entry["png_path"])) as image:
@@ -152,7 +172,7 @@ def _create_factorial_montages(
     neutral_rows = [
         row
         for row in rows
-        if row["content"] == "ambiguous"
+        if ("content" not in row or row["content"] == "ambiguous")
         and row["outline"] == "ambiguous"
         and row["shading"] == "none"
         and row["material"] == "ambiguous"

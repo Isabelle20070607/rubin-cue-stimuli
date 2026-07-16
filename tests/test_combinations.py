@@ -21,6 +21,24 @@ def test_factorial_combination_count_and_ids_are_unique() -> None:
     assert len({spec.compact_id for spec in specs}) == 96
 
 
+def test_v2_removes_content_and_conflict_while_retaining_shading() -> None:
+    specs = combination_specs(design_profile="v2")
+    assert len(specs) == 30
+    assert len({spec.combination_id for spec in specs}) == 30
+    assert len({spec.compact_id for spec in specs}) == 30
+    assert all(spec.content is None for spec in specs)
+    assert all("content" not in spec.as_dict() for spec in specs)
+    assert all("content" not in spec.combination_id for spec in specs)
+    assert all(not spec.compact_id.startswith("c") for spec in specs)
+    assert all(spec.design_tag != "conflict" for spec in specs)
+    assert all(not (spec.face_cues and spec.vase_cues) for spec in specs)
+    assert any(spec.shading == "figure" for spec in specs)
+    assert {
+        tag: sum(spec.design_tag == tag for spec in specs)
+        for tag in ("face", "ambiguous", "vase")
+    } == {"face": 12, "ambiguous": 6, "vase": 12}
+
+
 def test_shading_and_material_are_mutually_exclusive() -> None:
     with pytest.raises(ValueError, match="mutually exclusive"):
         CombinationSpec(
@@ -124,3 +142,16 @@ def test_combination_audit_writes_all_rows(tmp_path: Path) -> None:
         assert len(list(csv.DictReader(stream))) == 96
     payload = json.loads(json_path.read_text(encoding="utf-8"))
     assert payload["combination_count"] == 96
+
+
+def test_v2_combination_audit_omits_removed_fields(tmp_path: Path) -> None:
+    result = write_combination_audit(tmp_path, design_profile="v2")
+    assert result["combination_count"] == 30
+    assert result["tag_counts"] == {"face": 12, "ambiguous": 6, "vase": 12}
+    with Path(str(result["csv"])).open(
+        "r", encoding="utf-8-sig", newline=""
+    ) as stream:
+        reader = csv.DictReader(stream)
+        assert "content" not in (reader.fieldnames or [])
+        assert "is_conflict" not in (reader.fieldnames or [])
+        assert len(list(reader)) == 30

@@ -11,11 +11,11 @@ face contours.
 uv sync --extra dev
 uv run pytest
 uv run ruff check .
-uv run rubin-cues combinations --output tmp\combination-audit
+uv run rubin-cues combinations --config configs\v2.toml --output tmp\combination-audit-v2
 uv run rubin-cues outline-proof --config configs\v1.toml --output tmp\outline-face-proof
-uv run rubin-cues generate --config configs\v1.toml
-uv run rubin-cues validate --manifest stimuli\v1\manifest.jsonl
-uv run rubin-cues montage --manifest stimuli\v1\manifest.jsonl
+uv run rubin-cues generate --config configs\v2.toml
+uv run rubin-cues validate --manifest stimuli\v2\manifest.jsonl
+uv run rubin-cues montage --manifest stimuli\v2\manifest.jsonl
 ```
 
 The source registry retains six licensed face-vase SVG masters, and the formal bank uses
@@ -25,24 +25,27 @@ Four files are CC0; two Wikimedia families are CC BY-SA 3.0 and remain separatel
 attributed. See
 `assets/source/PROVENANCE.md` for exact URLs, licenses, and hashes.
 
-The factorial design has content (`face/ambiguous/vase`), outline
-(`ambiguous/face`), hard shading (`none/figure`), vase material
-(`ambiguous/vase`), and six polarity mappings. It deliberately has no graded strengths.
-The four enabled sources use 96 valid conditions each, so the bank contains 384 images.
-Hard figure shading never appears with either vase material relief or the
-different-colored-face content cue. `oc-276846-profile` and `oc-276861-full-faces` are
-excluded as complete stimulus
-families; their immutable masters remain only for provenance. Non-vase central figures
-and queen variants are also excluded.
+The published v1 factorial design has content (`face/ambiguous/vase`), outline
+(`ambiguous/face`), hard shading (`none/figure`), vase material (`ambiguous/vase`), and
+six polarity mappings. Its four enabled sources use 96 valid conditions each, for 384
+images under schema v7.
 
-The current v1 bank is frozen under `stimuli/v1`; rendering-rule changes require a full
-regeneration, manifest validation, and hash reproducibility check. Experiment delivery
-targets NIMH MonkeyLogic, not PsychoPy. Stimulus files never contain a baked-in fixation
-mark; MonkeyLogic may draw fixation dynamically and must record that choice.
+The v2 design removes the content axis and every condition containing opposing face- and
+vase-directed cues. It retains outline, hard shading, vase material, and all six polarity
+mappings. Five non-conflicting directional states produce 30 conditions per source and
+120 images under schema v8. V2 manifests, IDs, SVG metadata, and filenames contain no
+content or conflict fields. Across both banks, active figure shading never appears with
+vase material relief. `oc-276846-profile` and `oc-276861-full-faces` remain excluded as
+complete stimulus families; their immutable masters remain only for provenance.
 
-The combination audit and manifest assign `face`, `ambiguous`,
-`vase`, or `conflict`. Any mixture of face- and vase-directed cues is `conflict`; it is
-never relabeled by majority vote, and polarity remains a neutral control. An active
+The versioned banks are frozen under `stimuli/v1` and `stimuli/v2`; rendering-rule changes
+require a new version or a full regeneration, manifest validation, and hash reproducibility
+check. Experiment delivery targets NIMH MonkeyLogic, not PsychoPy. Stimulus files never
+contain a baked-in fixation mark; MonkeyLogic may draw fixation dynamically and must
+record that choice.
+
+V1 audits and manifests assign `face`, `ambiguous`, `vase`, or `conflict`; v2 assigns only
+`face`, `ambiguous`, or `vase`. Polarity remains a neutral control. An active
 shadow follows the current figure and uses the third black/gray/white value not already
 assigned to the figure and background. Its deterministic offset varies by stimulus; both
 absolute displacement components exceed 0.020 canvas units and the total radius is at

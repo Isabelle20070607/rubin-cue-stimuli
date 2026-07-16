@@ -6,9 +6,12 @@
 - `base_id`: one of the four enabled profile-compatible source-vector IDs.
 - `source_id`, `source_sha256`, `source_license`: immutable SVG provenance.
 - `combination_id`, `compact_id`: verbose audit key and filesystem-safe condition key.
-- `content`, `outline`, `shading`, `material`, `polarity`: factorial parameter states.
-- `design_tag`: `face`, `ambiguous`, `vase`, or `conflict`.
-- `face_cues`, `vase_cues`, `is_conflict`: directional-cue audit fields.
+- V1 schema v7 stores `content`, `outline`, `shading`, `material`, and `polarity`; v2
+  schema v8 omits `content` and stores the remaining four factorial parameters.
+- `design_tag`: v1 permits `face`, `ambiguous`, `vase`, or `conflict`; v2 permits only
+  `face`, `ambiguous`, or `vase`.
+- `face_cues`, `vase_cues`: directional-cue audit fields. V1 also stores `is_conflict`;
+  v2 omits it because conflicting combinations are not generated.
 - `figure_region`, `figure_color`, `background_color`, `third_color`, `shade_color`:
   palette-aware composition fields.
 - `shadow_dx`, `shadow_dy`, `shadow_seed`, `shadow_pair_mirrored`: deterministic hard
@@ -21,15 +24,14 @@
 
 ## Pre-render combination audit
 
-`rubin-cues combinations` enumerates the 96-condition parameter space used by each of the
-four enabled profile-compatible sources. OpenClipart 276846/276861 are excluded from the
-formal render. `shading=figure` is mutually exclusive with both `material=vase` and
-`content=face`. Each audit row records
-`content`, `outline`, `shading`, `material`, and the neutral `polarity` control.
+`rubin-cues combinations --config configs/v1.toml` enumerates the v1 96-condition
+parameter space. `--config configs/v2.toml` enumerates the v2 30-condition space without
+content or conflict fields. OpenClipart 276846/276861 are excluded from the formal render.
 
-- `design_tag`: `face`, `ambiguous`, `vase`, or `conflict`.
+- `design_tag`: v1 uses `face`, `ambiguous`, `vase`, or `conflict`; v2 uses the first
+  three values only.
 - `face_cues`, `vase_cues`: active directional cue axes, separated by `|` in CSV.
-- `is_conflict`: true whenever at least one face-directed cue and at least one
+- `is_conflict` (v1 only): true whenever at least one face-directed cue and at least one
   vase-directed cue are simultaneously active. Cue counts do not resolve a conflict.
 - `figure_region`: `vase` for an ambiguous outline and `face` for the face outline.
 - `figure_color`, `background_color`: the two colors selected by `polarity` after
@@ -38,19 +40,19 @@ formal render. `shading=figure` is mutually exclusive with both `material=vase` 
   black/gray/white. Shading follows the current figure, so it is vase-directed for an
   ambiguous outline and face-directed for the face outline.
 
-`conflict` is a design class, not a participant response and not evidence of a 50/50
-percept. `polarity` does not determine the design tag, but it does determine the three
-colors used for figure, background, and an active shadow. The approved experiment paradigm
-must define the behavioral response vocabulary independently.
+In v1, `conflict` is a design class, not a participant response and not evidence of a
+50/50 percept. V2 excludes those rows. `polarity` does not determine the design tag, but
+it does determine the three colors used for figure, background, and an active shadow. The
+approved experiment paradigm must define the behavioral response vocabulary independently.
 
-## Proposed schedules (not implemented for schema v7)
+## Proposed schedules (not implemented for schemas v7/v8)
 
 The replacement schema should include participant/animal, session, block, trial, stimulus
 ID/path, mask path, response mapping, requested durations, fixation-overlay policy,
 randomization seed, and visual angle. The current scheduling module targets the obsolete
 graded-axis manifest and must not be used with the formal factorial bank.
 
-## Proposed responses (not implemented for schema v7)
+## Proposed responses (not implemented for schemas v7/v8)
 
 Brief-task rows should store stimulus onset, actual stimulus/mask frames, dropped-frame
 count, response, RT, response mapping, and display configuration ID. If the approved
