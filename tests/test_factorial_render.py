@@ -62,6 +62,25 @@ def test_shadow_offsets_vary_by_condition_and_clear_component_thresholds(config)
     assert offsets == [shadow_offset(config, base, spec)[:2] for spec in active_specs]
 
 
+def test_v2_face_shadow_moves_inward_and_down_past_both_thresholds(v2_config) -> None:
+    spec = CombinationSpec(
+        None,
+        "face",
+        "figure",
+        "ambiguous",
+        "outer-gray_center-white",
+    )
+    dx, dy, _seed = shadow_offset(v2_config, _base(v2_config), spec)
+    assert dx > v2_config.shadow_min_abs_component
+    assert dy > v2_config.shadow_min_abs_component
+
+    svg, params = render_factorial_svg(v2_config, _base(v2_config), spec)
+    assert f'transform="translate({dx:.6f} {dy:.6f})"' in svg
+    assert f'transform="translate({-dx:.6f} {dy:.6f})"' in svg
+    assert params["shadow_dx"] == dx
+    assert params["shadow_dy"] == dy
+
+
 def test_klam_full_bank_face_outline_uses_lower_top_closure(config) -> None:
     base = next(
         base
@@ -107,11 +126,11 @@ def test_material_changes_only_the_vase_surface(config) -> None:
 
 
 def test_v2_uses_selected_texture_ranges_and_matched_flat_palette(v2_config) -> None:
-    assert v2_config.palette_values == {"black": 43, "gray": 154, "white": 201}
+    assert v2_config.palette_values == {"black": 43, "gray": 154, "white": 220}
     assert v2_config.material_value_ranges == {
         "black": (20, 58),
         "gray": (103, 186),
-        "white": (132, 244),
+        "white": (170, 252),
     }
     assert v2_config.material_shape_rendering == "crispEdges"
 

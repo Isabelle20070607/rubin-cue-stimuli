@@ -33,15 +33,15 @@
       186
     ],
     "white": [
-      132,
-      244
+      170,
+      252
     ]
   },
   "output": "G:\\workspace\\rubin-cue-stimuli\\stimuli\\v2",
   "palette_values": {
     "black": 43,
     "gray": 154,
-    "white": 201
+    "white": 220
   },
   "quality": {
     "edge_pair_relative_max": 0.05,

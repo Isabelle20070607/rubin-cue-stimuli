@@ -2,21 +2,21 @@
   {
     "base_id": "wm-cc0-classic",
     "mask_path": "masks/wm-cc0-classic-mask.png",
-    "sha256": "bdcba148592c461f3dd36723775e9ab5e7c976a34d07957ced30cfbfefc96788"
+    "sha256": "55e65cc50c59a440d51b6545bced28ce9d1c15c6f1a31ab5eb84f18c1699497e"
   },
   {
     "base_id": "wm-bysa-classic",
     "mask_path": "masks/wm-bysa-classic-mask.png",
-    "sha256": "08229e2ce3aa0d7f47bc1c5f046d0b8f2349630a76395bccfd01384c9474261d"
+    "sha256": "89927dfe1b9ebc61f3ac7dbd3ee818b5d1b0e79686aa7e1cbeba1d457013eee5"
   },
   {
     "base_id": "wm-bysa-klam",
     "mask_path": "masks/wm-bysa-klam-mask.png",
-    "sha256": "771639d755dbaff6a8d219046212fb7aae93fea52d7e9d543b3075a84440a55b"
+    "sha256": "b02c5dc5fa256d054df9e309ccd0d0d02edf4a120980044e0f27a3cc9d220bd3"
   },
   {
     "base_id": "oc-274578-heads",
     "mask_path": "masks/oc-274578-heads-mask.png",
-    "sha256": "4216dc0694e79e87736c7c88e75a6377ecd0b310f32849c9d7ef74dd78afca59"
+    "sha256": "d1cea34d3ff52f54f328f6ac8235f62b8b3eef01afba82efca74c61cdb1432d1"
   }
 ]

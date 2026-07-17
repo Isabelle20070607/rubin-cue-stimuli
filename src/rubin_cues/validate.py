@@ -155,6 +155,14 @@ def validate_manifest(path: str | Path) -> dict[str, Any]:
                 or radius > shadow_max_radius
             ):
                 errors.append(f"{stimulus_id}: shadow displacement outside bounds")
+            if (
+                design_profile == "v2"
+                and spec.figure_region == "face"
+                and (dx <= shadow_min_abs_component or dy <= shadow_min_abs_component)
+            ):
+                errors.append(
+                    f"{stimulus_id}: v2 face shadow must move inward and downward"
+                )
         elif abs(dx) > 1e-12 or abs(dy) > 1e-12:
             errors.append(f"{stimulus_id}: inactive shading has a displacement")
         tag_counts[spec.design_tag] += 1

@@ -21,12 +21,12 @@ material states, and the same 6 polarity mappings. After the shading/material ex
 and conflict filtering, five directional states remain: 30 conditions per source and 120
 stimuli overall.
 
-V2 reduces the material-lighting span for black and gray while retaining the selected
-white material range. The texture ranges are black `20-58`, gray `103-186`, and white
-`132-244`. With `crispEdges` eliminating antialiased patch seams, the final texture means
-across all enabled sources and relevant polarities at 1024 px are 43.3397, 153.8391, and
-200.6372. The matching flat means are 43.1419, 153.9663, and 200.8915 from the
-black/gray/white palette `43/154/201`; every aggregate mismatch is below 0.26 gray level.
+V2 reduces the material-lighting span for all three values while making the white texture
+brighter. The texture ranges are black `20-58`, gray `103-186`, and white `170-252`.
+With `crispEdges` eliminating antialiased patch seams, the final texture means across all
+enabled sources and relevant polarities at 1024 px are 43.3429, 153.8423, and 220.2085.
+The matching flat palette is `43/154/220`, with means 43.1520, 153.9762, and 219.8716;
+every aggregate texture-flat mismatch remains below 0.34 gray level.
 V1 retains its original palette and material rendering.
 
 - `content=face` breaks lightness homogeneity between the two profile regions;
@@ -40,7 +40,8 @@ V1 retains its original palette and material rendering.
   value not used by figure and background. Displacement varies deterministically by
   stimulus and is recorded in the manifest. At 1024 px, the absolute horizontal and
   vertical components each exceed 20.48 px (0.020 canvas units), while total radius is at
-  most 66.56 px (0.065 canvas units). Active shading cannot be combined with
+  most 66.56 px (0.065 canvas units). In v2, paired face shadows move inward and downward
+  so both components stay visible at the frame. Active shading cannot be combined with
   `content=face` or `material=vase`.
 - `material=vase` adds a deterministic Lambertian surface field to the central vase;
   `material=ambiguous` leaves it flat. `material=vase` cannot be combined with active

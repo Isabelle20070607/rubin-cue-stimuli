@@ -35,7 +35,7 @@ vase-directed cues. It retains outline, hard shading, vase material, and all six
 mappings. Five non-conflicting directional states produce 30 conditions per source and
 120 images under schema v8. V2 manifests, IDs, SVG metadata, and filenames contain no
 content or conflict fields. Its material ranges are black `20-58`, gray `103-186`, and
-white `132-244`; the matching non-textured palette is `43/154/201`. Material patches use
+white `170-252`; the matching non-textured palette is `43/154/220`. Material patches use
 SVG `crispEdges` rendering to prevent antialiased shared edges from forming a grid or
 moiré pattern. Across both banks, active figure shading never appears with vase material
 relief. `oc-276846-profile` and `oc-276861-full-faces` remain excluded as complete stimulus
@@ -56,7 +56,9 @@ V1 audits and manifests assign `face`, `ambiguous`, `vase`, or `conflict`; v2 as
 shadow follows the current figure and uses the third black/gray/white value not already
 assigned to the figure and background. Its deterministic offset varies by stimulus; both
 absolute displacement components exceed 0.020 canvas units and the total radius is at
-most 0.065 canvas units.
+most 0.065 canvas units. In v2, face-figure shadows move inward on both sides and downward
+so the required horizontal and vertical displacements remain visible instead of being
+clipped at the frame.
 
 See `docs/protocol.md`, `docs/data-dictionary.md`, `docs/literature.md`, and
 `assets/source/PROVENANCE.md` for the current design and provenance details.

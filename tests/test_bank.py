@@ -49,11 +49,11 @@ def test_v2_bank_has_versioned_schema_without_content_or_conflict(
     assert report["design_profile"] == "v2"
     assert report["stimulus_count"] == 60
     assert report["tag_counts"] == {"face": 24, "ambiguous": 12, "vase": 24}
-    assert report["palette_values"] == {"black": 43, "gray": 154, "white": 201}
+    assert report["palette_values"] == {"black": 43, "gray": 154, "white": 220}
     assert report["material_value_ranges"] == {
         "black": [20, 58],
         "gray": [103, 186],
-        "white": [132, 244],
+        "white": [170, 252],
     }
     assert report["material_shape_rendering"] == "crispEdges"
 
@@ -64,6 +64,17 @@ def test_v2_bank_has_versioned_schema_without_content_or_conflict(
     assert all("content_face_accent_side" not in row for row in rows)
     assert all(row["design_tag"] != "conflict" for row in rows)
     assert any(row["shading"] == "figure" for row in rows)
+    face_shades = [
+        row
+        for row in rows
+        if row["shading"] == "figure" and row["figure_region"] == "face"
+    ]
+    assert face_shades
+    assert all(
+        float(row["shadow_dx"]) > small_v2_config.shadow_min_abs_component
+        and float(row["shadow_dy"]) > small_v2_config.shadow_min_abs_component
+        for row in face_shades
+    )
     assert validate_manifest(output / "manifest.csv")["ok"]
     montage_report = create_montages(output / "manifest.jsonl", cell_size=32)
     assert Path(montage_report["baseline_overview"]).exists()

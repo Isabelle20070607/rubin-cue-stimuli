@@ -23,12 +23,12 @@ material_shape_rendering = "crispEdges"
 [render.palette]
 black = 43
 gray = 154
-white = 201
+white = 220
 
 [render.material_value_ranges]
 black = [20, 58]
 gray = [103, 186]
-white = [132, 244]
+white = [170, 252]
 
 [quality]
 mean_pair_max = 0.00392156862745098

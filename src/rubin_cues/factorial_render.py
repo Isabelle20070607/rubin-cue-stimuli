@@ -76,9 +76,15 @@ def shadow_offset(
         dx, dy = rng.normal(0.0, 0.027, size=2)
         radius = float(np.hypot(dx, dy))
         if abs(dx) > minimum and abs(dy) > minimum and radius <= maximum:
+            if config.design_profile == "v2" and spec.figure_region == "face":
+                # Keep both translated profile shadows visible: the left copy moves
+                # right, the right copy mirrors left, and both move downward.
+                return abs(float(dx)), abs(float(dy)), seed
             return float(dx), float(dy), seed
     component = (minimum + maximum / float(np.sqrt(2.0))) / 2.0
     signs = rng.choice((-1.0, 1.0), size=2)
+    if config.design_profile == "v2" and spec.figure_region == "face":
+        return component, component, seed
     return component * float(signs[0]), component * float(signs[1]), seed
 
 

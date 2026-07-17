@@ -16,7 +16,10 @@
   palette-aware composition fields.
 - `shadow_dx`, `shadow_dy`, `shadow_seed`, `shadow_pair_mirrored`: deterministic hard
   shadow provenance; active offsets vary by stimulus and clear the configured absolute
-  component threshold, while inactive shadows store zero displacement.
+  horizontal and vertical component thresholds, while inactive shadows store zero
+  displacement. For v2 face figures, positive `shadow_dx` denotes the left face moving
+  inward; the right face uses its negative mirror, and positive `shadow_dy` moves both
+  shadows downward.
 - `seed`, `config_version`, `params_json`: generation provenance.
 - V2 `generation.json` additionally records `palette_values` and
   `material_value_ranges`, plus `material_shape_rendering=crispEdges`; the palette and
