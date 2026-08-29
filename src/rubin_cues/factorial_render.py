@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import html
-import json
 from hashlib import sha256
 from io import BytesIO
 
@@ -10,10 +8,10 @@ import resvg_py
 from PIL import Image
 
 from .combinations import CombinationSpec
-from .config import DEFAULT_MATERIAL_VALUE_RANGES, DEFAULT_PALETTE_VALUES, Config
+from .config import Config
 from .source_geometry import SourceBase
 
-PALETTE_VALUES = DEFAULT_PALETTE_VALUES
+_SHADOW_SEED_NAMESPACE = "v2"
 
 
 def _points_path(points: list[tuple[float, float]]) -> str:
@@ -63,9 +61,9 @@ def face_paths(
 
 def shadow_offset(
     config: Config, base: SourceBase, spec: CombinationSpec
-) -> tuple[float, float, int]:
+) -> tuple[float, float]:
     payload = (
-        f"{config.version}|{config.seed}|{base.source.source_id}|"
+        f"{_SHADOW_SEED_NAMESPACE}|{config.seed}|{base.source.source_id}|"
         f"{spec.compact_id}|hard-shadow"
     ).encode()
     seed = int.from_bytes(sha256(payload).digest()[:8], "big")
@@ -76,16 +74,12 @@ def shadow_offset(
         dx, dy = rng.normal(0.0, 0.027, size=2)
         radius = float(np.hypot(dx, dy))
         if abs(dx) > minimum and abs(dy) > minimum and radius <= maximum:
-            if config.design_profile == "v2" and spec.figure_region == "face":
+            if spec.figure_region == "face":
                 # Keep both translated profile shadows visible: the left copy moves
                 # right, the right copy mirrors left, and both move downward.
-                return abs(float(dx)), abs(float(dy)), seed
-            return float(dx), float(dy), seed
-    component = (minimum + maximum / float(np.sqrt(2.0))) / 2.0
-    signs = rng.choice((-1.0, 1.0), size=2)
-    if config.design_profile == "v2" and spec.figure_region == "face":
-        return component, component, seed
-    return component * float(signs[0]), component * float(signs[1]), seed
+                return abs(float(dx)), abs(float(dy))
+            return float(dx), float(dy)
+    raise RuntimeError(f"could not sample a valid shadow offset for {spec.compact_id}")
 
 
 def _moving_average(values: np.ndarray, window: int) -> np.ndarray:
@@ -117,9 +111,7 @@ def _material_gray(
 def _material_vase_mesh(
     base: SourceBase,
     center_color: str,
-    value_ranges: dict[str, tuple[int, int]] = DEFAULT_MATERIAL_VALUE_RANGES,
-    *,
-    crisp_edges: bool = False,
+    value_ranges: dict[str, tuple[int, int]],
 ) -> str:
     y_indices = np.unique(np.linspace(0, len(base.y) - 1, 65).astype(int))
     u_edges = np.linspace(-1.0, 1.0, 33)
@@ -143,24 +135,16 @@ def _material_vase_mesh(
                 f"L {0.5 + u0 * width1:.6f} {y1:.6f} Z"
             )
             patches.append(f'<path d="{path}" fill="{fill}"/>')
-    crisp_attribute = ' shape-rendering="crispEdges"' if crisp_edges else ""
-    return (
-        f'<g id="material-vase-diffuse"{crisp_attribute}>'
-        + "".join(patches)
-        + "</g>"
-    )
-
-
-def _content_side(base: SourceBase) -> str:
-    digest = sha256(f"{base.source.source_id}|content-face-side".encode()).digest()
-    return "left" if digest[0] % 2 == 0 else "right"
+    return '<g id="material-vase-diffuse" shape-rendering="crispEdges">' + "".join(
+        patches
+    ) + "</g>"
 
 
 def render_factorial_svg(
     config: Config,
     base: SourceBase,
     spec: CombinationSpec,
-) -> tuple[str, dict[str, object]]:
+) -> str:
     vase_path = center_path(base)
     outline_top_y = base.source.face_outline_top_y if spec.outline == "face" else None
     left_face, right_face = face_paths(base, top_y_override=outline_top_y)
@@ -171,19 +155,14 @@ def render_factorial_svg(
     outer_fill = palette_hex[spec.outer_color]
     center_fill = palette_hex[spec.center_color]
     third_fill = palette_hex[spec.third_color]
-    dx, dy, shadow_seed = shadow_offset(config, base, spec)
+    dx, dy = (
+        shadow_offset(config, base, spec)
+        if spec.shading == "figure"
+        else (0.0, 0.0)
+    )
 
-    content_pattern = ""
-    if spec.content is not None:
-        content_pattern = (
-            '<pattern id="content-stripes" width="1" height=".050" '
-            'patternUnits="userSpaceOnUse">'
-            f'<rect width="1" height=".050" fill="{outer_fill}"/>'
-            f'<rect width="1" height=".018" fill="{third_fill}"/>'
-            "</pattern>"
-        )
     definitions = (
-        f'<defs>{content_pattern}<clipPath id="canvas-clip"><rect width="1" height="1"/>'
+        '<defs><clipPath id="canvas-clip"><rect width="1" height="1"/>'
         "</clipPath></defs>"
     )
 
@@ -218,69 +197,24 @@ def render_factorial_svg(
             f'<path d="{right_face}" fill="{outer_fill}"/></g>'
         )
 
-    content = ""
-    content_side = ""
-    if spec.content == "face":
-        content_side = _content_side(base)
-        selected_path = left_face if content_side == "left" else right_face
-        content = (
-            '<g id="content-broken-profile-homogeneity">'
-            f'<path d="{selected_path}" fill="{third_fill}"/></g>'
-        )
-    elif spec.content == "vase":
-        content = (
-            '<g id="content-profile-horizontal-stripes">'
-            f'<path d="{left_face}" fill="url(#content-stripes)"/>'
-            f'<path d="{right_face}" fill="url(#content-stripes)"/></g>'
-        )
-
     material = (
         _material_vase_mesh(
             base,
             spec.center_color,
             config.material_value_ranges,
-            crisp_edges=config.material_shape_rendering == "crispEdges",
         )
         if spec.material == "vase"
         else ""
-    )
-    render_params = {
-        "background_color": spec.background_color,
-        "figure_color": spec.figure_color,
-        "figure_region": spec.figure_region,
-        "fixation_baked_in": False,
-        "shadow_dx": dx if spec.shading == "figure" else 0.0,
-        "shadow_dy": dy if spec.shading == "figure" else 0.0,
-        "shadow_max_radius": config.shadow_max_radius,
-        "shadow_min_abs_component": config.shadow_min_abs_component,
-        "shadow_pair_mirrored": spec.figure_region == "face" and spec.shading == "figure",
-        "shadow_seed": shadow_seed,
-        "shade_color": spec.shade_color,
-        "third_color": spec.third_color,
-    }
-    if spec.content is not None:
-        render_params["content_face_accent_side"] = content_side
-    metadata = html.escape(
-        json.dumps(
-            {
-                **spec.as_dict(),
-                **render_params,
-                "source_id": base.source.source_id,
-                "source_license": base.source.license_id,
-                "source_sha256": base.source.sha256,
-            },
-            sort_keys=True,
-        )
     )
     svg = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" '
         f'width="{config.canvas_size}" height="{config.canvas_size}">'
-        f"<metadata>{metadata}</metadata>{definitions}"
+        f"{definitions}"
         '<g id="factorial-stimulus" clip-path="url(#canvas-clip)">'
-        f"{base_layers}{content}{material}</g></svg>\n"
+        f"{base_layers}{material}</g></svg>\n"
     )
-    return svg, render_params
+    return svg
 
 
 def rasterize_factorial_svg(svg: str) -> Image.Image:

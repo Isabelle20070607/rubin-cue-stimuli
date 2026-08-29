@@ -1,64 +1,37 @@
 # Rubin Cue Stimuli
 
-Deterministic, experiment-oriented Rubin profile/central-figure stimuli built from
-licensed SVG source masters. The project preserves the downloaded vectors verbatim and
-creates normalized derivatives; it does not crop figures from the papers or invent new
-face contours.
+This repository contains 120 grayscale Rubin face-vase stimuli in `images/` and the
+generator used to create them from four licensed source SVGs. The image set crosses four
+source contours with 30 non-conflicting combinations of outline, shading, material, and
+black/gray/white polarity. No fixation mark is baked into the images.
 
-## Quick start
+## Generate the images
 
 ```powershell
 uv sync --extra dev
-uv run pytest
-uv run ruff check .
-uv run rubin-cues combinations --config configs\v2.toml --output tmp\combination-audit-v2
-uv run rubin-cues outline-proof --config configs\v1.toml --output tmp\outline-face-proof
-uv run rubin-cues generate --config configs\v2.toml
-uv run rubin-cues validate --manifest stimuli\v2\manifest.jsonl
-uv run rubin-cues montage --manifest stimuli\v2\manifest.jsonl
+uv run rubin-cues --config config.toml --overwrite
 ```
 
-The source registry retains six licensed face-vase SVG masters, and the formal bank uses
-the four accepted profile-compatible sources. Each enabled source contour is crossed with
-six ordered black/gray/white polarity mappings without hand-drawing faces.
-Four files are CC0; two Wikimedia families are CC BY-SA 3.0 and remain separately
-attributed. See
-`assets/source/PROVENANCE.md` for exact URLs, licenses, and hashes.
+The command writes the complete image set to `images/`. Use `--output <directory>` to
+generate a candidate set elsewhere while adjusting a new source.
 
-The published v1 factorial design has content (`face/ambiguous/vase`), outline
-(`ambiguous/face`), hard shading (`none/figure`), vase material (`ambiguous/vase`), and
-six polarity mappings. Its four enabled sources use 96 valid conditions each, for 384
-images under schema v7.
+To add a source SVG, place it under `assets/source/` and add its source details and crop
+box to `SOURCE_ASSETS` in `src/rubin_cues/source_assets.py`. Then add the source and license
+information to `assets/source/PROVENANCE.md` and generate into a temporary directory for
+visual review before replacing `images/`.
 
-The v2 design removes the content axis and every condition containing opposing face- and
-vase-directed cues. It retains outline, hard shading, vase material, and all six polarity
-mappings. Five non-conflicting directional states produce 30 conditions per source and
-120 images under schema v8. V2 manifests, IDs, SVG metadata, and filenames contain no
-content or conflict fields. Its material ranges are black `20-58`, gray `103-186`, and
-white `170-252`; the matching non-textured palette is `43/154/220`. Material patches use
-SVG `crispEdges` rendering to prevent antialiased shared edges from forming a grid or
-moiré pattern. Across both banks, active figure shading never appears with vase material
-relief. `oc-276846-profile` and `oc-276861-full-faces` remain excluded as complete stimulus
-families; their immutable masters remain only for provenance.
+## File names
 
-The versioned banks are frozen under `stimuli/v1` and `stimuli/v2`; rendering-rule changes
-require a new version or a full regeneration, manifest validation, and hash reproducibility
-check. Experiment delivery targets NIMH MonkeyLogic, not PsychoPy. Stimulus files never
-contain a baked-in fixation mark; MonkeyLogic may draw fixation dynamically and must
-record that choice.
+Files use this pattern:
 
-Each bank also retains one deterministic phase-scrambled mask per enabled source. These
-are optional assets for an explicitly approved backward-masking block; their presence in
-`masks/` does not make them part of the default v2 presentation sequence.
+```text
+<source>__o{a|f}-s{n|f}-m{a|v}-p{outer}{center}.png
+```
 
-V1 audits and manifests assign `face`, `ambiguous`, `vase`, or `conflict`; v2 assigns only
-`face`, `ambiguous`, or `vase`. Polarity remains a neutral control. An active
-shadow follows the current figure and uses the third black/gray/white value not already
-assigned to the figure and background. Its deterministic offset varies by stimulus; both
-absolute displacement components exceed 0.020 canvas units and the total radius is at
-most 0.065 canvas units. In v2, face-figure shadows move inward on both sides and downward
-so the required horizontal and vertical displacements remain visible instead of being
-clipped at the frame.
+- `o`: ambiguous or face outline
+- `s`: no shading or figure shading
+- `m`: ambiguous or vase material
+- `p`: ordered outer and center colors (`b`, `g`, or `w`)
 
-See `docs/protocol.md`, `docs/data-dictionary.md`, `docs/literature.md`, and
-`assets/source/PROVENANCE.md` for the current design and provenance details.
+Conditions that combine face-directed and vase-directed cues are omitted. Source and
+license details are listed in `assets/source/PROVENANCE.md`.

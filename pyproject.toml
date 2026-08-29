@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "rubin-cue-stimuli"
 version = "0.1.0"
-description = "Deterministic Rubin face-vase cue stimulus generation and calibration tools"
+description = "Rubin face-vase cue images and their generator"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

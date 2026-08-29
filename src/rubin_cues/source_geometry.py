@@ -2,14 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
 
 import numpy as np
 from PIL import Image, ImageFilter
 
 from .source_assets import SOURCE_ASSETS, SourceAsset, render_source_preview
-
-Polarity = Literal["dark-outer", "light-outer"]
 
 
 @dataclass(frozen=True)
@@ -17,19 +14,14 @@ class SourceContour:
     source: SourceAsset
     y: np.ndarray
     widths: np.ndarray
-    face_top: float
-    face_bottom: float
 
 
 @dataclass(frozen=True)
 class SourceBase:
     base_id: str
     source: SourceAsset
-    polarity: Polarity
     y: np.ndarray
     widths: np.ndarray
-    face_top: float
-    face_bottom: float
 
 
 def _interpolate_missing(values: np.ndarray, valid: np.ndarray) -> np.ndarray:
@@ -113,14 +105,10 @@ def extract_source_contour(
     row_indices = np.arange(crop_height, dtype=np.float64)
     sampled_widths = np.interp(sample_rows, row_indices, normalized_half_width) * box_width
     sampled_y = y_start + np.linspace(0.0, box_height, samples)
-    face_top = y_start + asset.face_y_range[0] * box_height
-    face_bottom = y_start + asset.face_y_range[1] * box_height
     return SourceContour(
         source=asset,
         y=sampled_y,
         widths=sampled_widths,
-        face_top=face_top,
-        face_bottom=face_bottom,
     )
 
 
@@ -128,16 +116,12 @@ def source_bases(project_root: str | Path) -> list[SourceBase]:
     bases: list[SourceBase] = []
     for asset in SOURCE_ASSETS:
         contour = extract_source_contour(project_root, asset)
-        for polarity in ("dark-outer", "light-outer"):
-            bases.append(
-                SourceBase(
-                    base_id=f"{asset.source_id}-{polarity}",
-                    source=asset,
-                    polarity=polarity,
-                    y=contour.y.copy(),
-                    widths=contour.widths.copy(),
-                    face_top=contour.face_top,
-                    face_bottom=contour.face_bottom,
-                )
+        bases.append(
+            SourceBase(
+                base_id=asset.source_id,
+                source=asset,
+                y=contour.y.copy(),
+                widths=contour.widths.copy(),
             )
+        )
     return bases

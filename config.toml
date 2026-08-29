@@ -1,0 +1,17 @@
+[project]
+seed = 78108
+canvas_size = 1024
+
+[render]
+shadow_min_abs_component = 0.020
+shadow_max_radius = 0.065
+
+[render.palette]
+black = 43
+gray = 154
+white = 220
+
+[render.material_value_ranges]
+black = [20, 58]
+gray = [103, 186]
+white = [170, 252]

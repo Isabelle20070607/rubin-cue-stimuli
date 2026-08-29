@@ -1,3 +1,1 @@
-"""Deterministic Rubin face-vase cue stimulus tools."""
-
-__version__ = "0.1.0"
+"""Rubin cue stimulus image generator."""
