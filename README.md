@@ -1,11 +1,12 @@
 # Rubin Cue Stimuli
 
 实验交接用刺激库：8 套轮廓 × 30 个条件，共 240 张 PNG。
-新增 bird、dog、woman、macaque 四套，与原有四套一起放在 `images/`。
+新增 bird、dog、woman、macaque 四套，与原有四套一起放在 `images/`，
+按来源分为 8 套，每套再按背景颜色分黑、灰、白三组，每组 10 张。
 
 | 文件 | 用途 |
 | --- | --- |
-| `images/*.png` | 正式刺激，1024 × 1024，8-bit 灰度，无内置注视点 |
+| `images/<source_id>/background-<color>/*.png` | 每套按背景颜色分组，1024 × 1024，8-bit 灰度，无内置注视点 |
 | [stimuli.csv](stimuli.csv) | 图片路径、来源、条件标签、尺寸和 SHA-256，一图一行 |
 | [SOURCES.md](SOURCES.md) | 来源、署名与已知许可信息 |
 
@@ -14,6 +15,11 @@
 `stimulus_id` 是不含扩展名的完整文件名；`image_path` 相对于仓库根目录。
 刺激标识不是试次号或硬件事件码。CSV 是索引，不是 MonkeyLogic conditions 文件。
 MATLAB 可用 `readtable('stimuli.csv','TextType','string')` 读取。
+
+每套包含 `background-black`、`background-gray`、`background-white` 三个文件夹。
+分类遵循实验选组规则：ambiguous 轮廓条件以两侧颜色为背景，face 轮廓条件以
+中心颜色为背景；CSV 的 `background_color` 列记录该分类。它不是对被试知觉的断言。
+例如黑背景组包含前三类中心图形条件的 pbg/pbw，以及两类两侧图形条件的 pgb/pwb。
 
 文件名：`<source>__o{a|f}-s{n|f}-m{a|v}-p{outer}{center}.png`。
 
