@@ -6,7 +6,7 @@
 
 | 文件 | 用途 |
 | --- | --- |
-| `images/<source_id>/background-<color>/*.png` | 每套按背景颜色分组，1024 × 1024，8-bit 灰度，无内置注视点 |
+| `images/<set_name>/background-<color>/*.png` | 每套按背景颜色分组，1024 × 1024，8-bit 灰度，无内置注视点 |
 | [stimuli.csv](stimuli.csv) | 图片路径、来源、条件标签、尺寸和 SHA-256，一图一行 |
 | [SOURCES.md](SOURCES.md) | 来源、署名与已知许可信息 |
 
@@ -15,6 +15,19 @@
 `stimulus_id` 是不含扩展名的完整文件名；`image_path` 相对于仓库根目录。
 刺激标识不是试次号或硬件事件码。CSV 是索引，不是 MonkeyLogic conditions 文件。
 MATLAB 可用 `readtable('stimuli.csv','TextType','string')` 读取。
+
+文件夹使用简短的 `set_name`；文件名和 `source_id` 保留原标识，便于对应来源。
+
+| 文件夹 / set_name | source_id |
+| --- | --- |
+| face1 | wm-cc0-classic |
+| face2 | wm-bysa-classic |
+| face3 | wm-bysa-klam |
+| face4 | oc-274578-heads |
+| bird | user-bird |
+| dog | user-dog |
+| woman | user-woman |
+| macaque | user-macaque |
 
 每套包含 `background-black`、`background-gray`、`background-white` 三个文件夹。
 分类遵循实验选组规则：ambiguous 轮廓条件以两侧颜色为背景，face 轮廓条件以
